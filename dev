@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+
+usage="
+Usage:
+    $0 [options]
+
+Options:
+    -b, --build             build the container image before starting an instance of it
+    -c, --create  string    create an instance of the container with the given name but do not start it
+    -e, --execute string    execute the given string as a command in an instance of the container
+"
+
+usage() {
+    echo "$usage"
+    exit 1
+}
+
+OPTIONS=$(getopt -o bc:e: --long build,create:,execute: == "$@")
+
+if [ $? -ne 0 ]; then
+    usage
+    exit 1
+fi
+
+image="sample-containerized-workflow"
+container="$image-dev"
+build=false
+create=""
+execute=""
+
+eval set -- "$OPTIONS"
+while true; do
+    case "$1" in
+        -b|--build)
+            build=true
+            shift
+            ;;
+        -c|--create)
+            create=$2
+            shift 2
+            ;;
+        -e|--execute)
+            execute=$2
+            shift 2
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            usage
+            ;;
+    esac
+done
+
+build() {
+    podman build -t "$image" .
+}
+
+create() {
+    local name="$1"
+    podman create \
+        -it \
+        --name "$name" \
+        "$image" \
+        bash
+}
+
+run() {
+    podman run \
+        -it \
+        --rm \
+        --name $container \
+        --mount "type=bind,source=${PWD}/app,target=/usr/app" \
+        "$image"
+}
+
+execute() {
+    local cmd="$1"
+    podman run \
+        -it \
+        --rm \
+        --name "$container" \
+        --entrypoint "/bin/bash" \
+        --mount "type=bind,source=${PWD}/app,target=/usr/app" \
+        "$image" \
+        -c "bash $cmd"
+        #-c "bash $cmd ; bash" # this variation keeps a bash shell open ofter command execution instead
+}
+
+if [ $build = true ]; then
+    build
+fi
+
+if [ -n "$execute" ]; then
+    execute "$execute"
+elif [ -n "$create" ]; then
+    create "$create"
+else
+    run
+fi
