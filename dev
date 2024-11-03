@@ -15,11 +15,9 @@ usage() {
     exit 1
 }
 
-OPTIONS=$(getopt -o bc:e: --long build,create:,execute: == "$@")
 
-if [ $? -ne 0 ]; then
+if ! OPTIONS=$(getopt -o bc:e: --long build,create:,execute: == "$@") ; then
     usage
-    exit 1
 fi
 
 image="sample-containerized-workflow"
