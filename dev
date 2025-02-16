@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# set the POSIX exit-on-error option:
+#   https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#set
+set -e
+
 usage="
 Usage:
     $0 [options]
