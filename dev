@@ -58,29 +58,32 @@ build() {
 create() {
     local name="$1"
     podman create \
-        -it \
+        --interactive \
         --name "$name" \
+        --tty \
         "$image" \
         bash
 }
 
 run() {
     podman run \
-        -it \
-        --rm \
-        --name $container \
+        --interactive \
         --mount "type=bind,source=${PWD}/app,target=/usr/app" \
+        --name $container \
+        --rm \
+        --tty \
         "$image"
 }
 
 execute() {
     local cmd="$1"
     podman run \
-        -it \
-        --rm \
-        --name "$container" \
         --entrypoint "/bin/bash" \
+        --interactive \
         --mount "type=bind,source=${PWD}/app,target=/usr/app" \
+        --name "$container" \
+        --rm \
+        --tty \
         "$image" \
         -c "bash $cmd"
         #-c "bash $cmd ; bash" # this variation keeps a bash shell open ofter command execution instead
